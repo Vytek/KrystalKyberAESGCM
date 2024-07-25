@@ -1,2 +1,2 @@
 # KrystalKyberAESGCM
-Test with Kystal Kyber and AES GCM
+Test with Krystal Kyber and AES GCM

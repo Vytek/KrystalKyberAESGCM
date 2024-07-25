@@ -6,8 +6,7 @@ import (
 	"crypto/rand"
 	"fmt"
 
-		kyberk2so "github.com/symbolicsoft/kyber-k2so"
-
+	kyberk2so "github.com/symbolicsoft/kyber-k2so"
 )
 
 var (
@@ -77,7 +76,7 @@ func main() {
 
 	secretKey = string(ssA[:])
 	fmt.Printf("ssA: %s \n", secretKey)
-	
+
 	// This will successfully encrypt & decrypt
 	ciphertext1 := encrypt("This is some sensitive information")
 	fmt.Printf("Encrypted ciphertext 1: %x \n", ciphertext1)
@@ -94,7 +93,7 @@ func main() {
 
 	secretKey = string(ssB[:])
 	fmt.Printf("ssB: %s \n", secretKey)
-	
+
 	// This will successfully encrypt & decrypt
 	ciphertext1 = encrypt("This is some sensitive information")
 	fmt.Printf("Encrypted ciphertext 1: %x \n", ciphertext1)
