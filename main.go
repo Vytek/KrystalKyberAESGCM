@@ -4,9 +4,16 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 
+	"log"
+
 	kyberk2so "github.com/symbolicsoft/kyber-k2so"
+
+	b64 "encoding/base64"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 var (
@@ -67,44 +74,51 @@ func decrypt(ciphertext string) string {
 	return string(plaintext)
 }
 
+func toHex(InputString string) string {
+	return hex.EncodeToString([]byte(InputString))
+}
+
 func main() {
 	//Krystal Kyber
-
 	privateKey, publicKey, _ := kyberk2so.KemKeypair1024()
 	ciphertext, ssA, _ := kyberk2so.KemEncrypt1024(publicKey)
 	ssB, _ := kyberk2so.KemDecrypt1024(ciphertext, privateKey)
 
+	fmt.Printf("Hex ssA: %s\n", toHex(string(ssA[:])))
+	fmt.Printf("ssA: %s\n", string(ssA[:]))
+	fmt.Printf("Hex ssB: %s\n", toHex(string(ssB[:])))
+	fmt.Printf("ssB: %s\n", string(ssB[:]))
+
+	//SecretKey
 	secretKey = string(ssA[:])
-	fmt.Printf("ssA: %s \n", secretKey)
+	fmt.Printf("SecretKey Base64: %s\n", b64.StdEncoding.EncodeToString([]byte(secretKey)))
 
-	// This will successfully encrypt & decrypt
-	ciphertext1 := encrypt("This is some sensitive information")
-	fmt.Printf("Encrypted ciphertext 1: %x \n", ciphertext1)
+	// Fiber instance
+	app := fiber.New()
 
-	plaintext1 := decrypt(ciphertext1)
-	fmt.Printf("Decrypted plaintext 1: %s \n", plaintext1)
+	// Routes
+	app.Get("/secretkey", h_secretkey)
+	app.Post("/encrypt", h_encrypt)
+	app.Post("/decrypt", h_decrypt)
 
-	// This will successfully encrypt & decrypt as well.
-	ciphertext2 := encrypt("Hello")
-	fmt.Printf("Encrypted ciphertext 2: %x \n", ciphertext2)
+	// Start server
+	log.Fatal(app.Listen(":3000"))
+}
 
-	plaintext2 := decrypt(ciphertext2)
-	fmt.Printf("Decrypted plaintext 2: %s \n", plaintext2)
+// Handlers
+func h_secretkey(c *fiber.Ctx) error {
+	return c.SendString(b64.StdEncoding.EncodeToString([]byte(secretKey)))
+}
 
-	secretKey = string(ssB[:])
-	fmt.Printf("ssB: %s \n", secretKey)
+func h_encrypt(c *fiber.Ctx) error {
+	return c.SendString(b64.StdEncoding.EncodeToString([]byte(encrypt(string(c.Body())))))
+}
 
-	// This will successfully encrypt & decrypt
-	ciphertext1 = encrypt("This is some sensitive information")
-	fmt.Printf("Encrypted ciphertext 1: %x \n", ciphertext1)
-
-	plaintext1 = decrypt(ciphertext1)
-	fmt.Printf("Decrypted plaintext 1: %s \n", plaintext1)
-
-	// This will successfully encrypt & decrypt as well.
-	ciphertext2 = encrypt("Hello")
-	fmt.Printf("Encrypted ciphertext 2: %x \n", ciphertext2)
-
-	plaintext2 = decrypt(ciphertext2)
-	fmt.Printf("Decrypted plaintext 2: %s \n", plaintext2)
+func h_decrypt(c *fiber.Ctx) error {
+	decoded_b64, err := b64.StdEncoding.DecodeString(string(c.Body()))
+	if err != nil {
+		return c.SendString(err.Error())
+	} else {
+		return c.SendString(decrypt(string(decoded_b64)))
+	}
 }
